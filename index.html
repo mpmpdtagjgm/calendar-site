@@ -3,318 +3,250 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>みんなで共有カレンダー（スマホ向け）</title>
+  <title>共有カレンダー</title>
   <style>
     * { box-sizing: border-box; }
     :root {
-      --bg: #f8fafc;
+      --bg: #f1f5f9;
       --card: #ffffff;
       --line: #e2e8f0;
       --line-strong: #cbd5e1;
       --text: #0f172a;
-      --subtle: #475569;
+      --subtle: #64748b;
       --blue: #2563eb;
       --blue-soft: #eff6ff;
-      --dark: #0f172a;
-      --danger: #b91c1c;
-      --danger-line: #fecaca;
-      --radius: 16px;
-      --shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+      --dark: #1e293b;
+      --danger: #dc2626;
+      --danger-bg: #fef2f2;
+      --radius: 14px;
+      --shadow: 0 2px 12px rgba(15,23,42,0.08);
     }
-    html, body {
-      margin: 0;
-      padding: 0;
-      background: var(--bg);
-      color: var(--text);
-      font-family: Arial, Helvetica, sans-serif;
-    }
-    body {
-      -webkit-text-size-adjust: 100%;
-    }
+    html, body { margin:0; padding:0; background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif; }
+    body { -webkit-text-size-adjust:100%; }
     .app {
-      width: 100%;
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: max(12px, env(safe-area-inset-top)) 12px max(20px, env(safe-area-inset-bottom)) 12px;
+      width:100%;
+      max-width:1100px;
+      margin:0 auto;
+      padding:max(12px,env(safe-area-inset-top)) 12px max(24px,env(safe-area-inset-bottom));
     }
     .panel {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 14px;
-      margin-bottom: 14px;
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:16px;
+      margin-bottom:14px;
     }
-    h1, h2, h3, p { margin: 0; }
+    h1,h2,h3,p { margin:0; }
+
+    /* header */
     .header {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
     }
-    .title {
-      font-size: 24px;
-      line-height: 1.2;
+    .title { font-size:22px; font-weight:800; letter-spacing:-.5px; }
+    .subtitle { color:var(--subtle); font-size:13px; margin-top:4px; }
+    .header-actions { display:flex; flex-wrap:wrap; gap:8px; }
+
+    /* buttons */
+    button, .file-label {
+      min-height:40px;
+      border:1px solid var(--line-strong);
+      background:#fff;
+      color:var(--text);
+      border-radius:10px;
+      padding:8px 14px;
+      font-size:14px;
+      cursor:pointer;
+      text-align:center;
+      white-space:nowrap;
     }
-    .subtitle,
-    .helper {
-      color: var(--subtle);
-      font-size: 14px;
-      line-height: 1.6;
+    button:active, .file-label:active { opacity:.8; }
+    .btn-primary { background:var(--dark); color:#fff; border-color:var(--dark); font-weight:700; }
+    .btn-danger { background:var(--danger-bg); color:var(--danger); border-color:#fca5a5; }
+    .btn-sm { min-height:32px; padding:4px 10px; font-size:13px; }
+    .btn-icon { min-height:36px; padding:6px 12px; }
+
+    /* toast */
+    #toast {
+      position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(60px);
+      background:var(--dark); color:#fff; border-radius:999px; padding:10px 22px;
+      font-size:14px; pointer-events:none; transition:transform .25s,opacity .25s; opacity:0; z-index:9999;
     }
-    .button-row {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 8px;
-    }
-    button,
-    .file-label {
-      width: 100%;
-      min-height: 44px;
-      border: 1px solid var(--line-strong);
-      background: #fff;
-      color: var(--text);
-      border-radius: 12px;
-      padding: 10px 14px;
-      font-size: 15px;
-      cursor: pointer;
-      text-align: center;
-    }
-    .primary {
-      background: var(--dark);
-      color: #fff;
-      border-color: var(--dark);
-      font-weight: bold;
-    }
-    .layout {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 14px;
-    }
+    #toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
+
+    /* layout */
+    .layout { display:grid; grid-template-columns:1fr; gap:14px; }
+
+    /* month nav */
     .month-header {
-      display: grid;
-      grid-template-columns: auto 1fr auto;
-      gap: 8px;
-      align-items: center;
-      margin-bottom: 10px;
+      display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;
     }
-    .month-title {
-      text-align: center;
-      font-size: 18px;
-      line-height: 1.3;
-    }
-    .week-grid,
-    .calendar-grid {
-      display: grid;
-      grid-template-columns: repeat(7, minmax(0, 1fr));
-      gap: 4px;
+    .month-title { font-size:18px; font-weight:700; }
+    .month-nav { display:flex; gap:6px; }
+    .today-btn { font-size:12px; padding:4px 10px; min-height:30px; }
+
+    /* calendar grid */
+    .week-grid, .calendar-grid {
+      display:grid;
+      grid-template-columns:repeat(7, minmax(0,1fr));
+      gap:3px;
     }
     .weekday {
-      text-align: center;
-      font-size: 11px;
-      font-weight: bold;
-      color: #64748b;
-      padding-bottom: 2px;
+      text-align:center; font-size:11px; font-weight:700;
+      color:var(--subtle); padding-bottom:4px;
     }
+    .weekday.sun { color:#ef4444; }
+    .weekday.sat { color:#3b82f6; }
     .day {
-      min-height: 72px;
-      border: 1px solid var(--line-strong);
-      border-radius: 12px;
-      padding: 6px;
-      background: #fff;
-      cursor: pointer;
-      text-align: left;
-      overflow: hidden;
+      min-height:68px;
+      border:1.5px solid var(--line);
+      border-radius:10px;
+      padding:5px;
+      background:#fff;
+      cursor:pointer;
+      text-align:left;
+      overflow:hidden;
+      transition:border-color .15s, background .15s;
     }
-    .day.other-month { opacity: 0.42; }
-    .day.selected {
-      background: var(--blue-soft);
-      border: 2px solid var(--blue);
+    .day:hover { border-color:#94a3b8; }
+    .day.other-month { opacity:.4; }
+    .day.selected { background:var(--blue-soft); border-color:var(--blue); }
+    .day.today-cell { border-color:#94a3b8; }
+    .day-top { display:flex; justify-content:space-between; align-items:flex-start; }
+    .day-num { font-size:13px; font-weight:700; line-height:1.2; }
+    .day-num.is-today {
+      display:inline-flex; align-items:center; justify-content:center;
+      width:24px; height:24px; border-radius:50%;
+      background:var(--dark); color:#fff; font-size:12px;
     }
-    .day-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 4px;
+    .day-num.sun { color:#ef4444; }
+    .day-num.sat { color:#3b82f6; }
+    .more-badge {
+      font-size:10px; color:var(--subtle); padding:0 2px;
     }
-    .day-num {
-      font-size: 13px;
-      font-weight: bold;
-      line-height: 1.2;
+    .preview-pill {
+      margin-top:3px;
+      font-size:10px;
+      line-height:1.3;
+      border-radius:6px;
+      padding:2px 5px;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+      font-weight:600;
     }
-    .today {
-      display: inline-block;
-      background: var(--dark);
-      color: #fff;
-      border-radius: 999px;
-      padding: 2px 7px;
-      font-size: 12px;
-    }
-    .badge {
-      display: inline-block;
-      border-radius: 999px;
-      padding: 2px 6px;
-      font-size: 11px;
-      font-weight: bold;
-      background: #e2e8f0;
-      color: #334155;
-      flex-shrink: 0;
-    }
-    .preview-item {
-      margin-top: 4px;
-      font-size: 10px;
-      line-height: 1.2;
-      background: #f1f5f9;
-      border-radius: 8px;
-      padding: 3px 5px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .form-group { margin-bottom: 10px; }
-    label {
-      display: block;
-      font-size: 13px;
-      font-weight: bold;
-      margin-bottom: 4px;
-    }
+    /* member colors */
+    .cat-みんな  { background:#e2e8f0; color:#334155; }
+    .cat-自分    { background:#dbeafe; color:#1d4ed8; }
+    .cat-家族    { background:#dcfce7; color:#15803d; }
+    .cat-友だち  { background:#fce7f3; color:#9d174d; }
+    .cat-仕事    { background:#fef9c3; color:#a16207; }
+
+    /* form */
+    .form-grid { display:grid; grid-template-columns:1fr; gap:10px; }
+    .form-group { display:flex; flex-direction:column; gap:4px; }
+    label { font-size:13px; font-weight:700; color:var(--subtle); }
     input, select, textarea {
-      width: 100%;
-      min-height: 44px;
-      border: 1px solid var(--line-strong);
-      border-radius: 12px;
-      padding: 10px 12px;
-      font-size: 16px;
-      background: #fff;
-      color: var(--text);
+      width:100%; min-height:40px;
+      border:1.5px solid var(--line-strong); border-radius:10px;
+      padding:8px 12px; font-size:15px;
+      background:#fff; color:var(--text);
+      transition:border-color .15s;
     }
-    textarea {
-      min-height: 96px;
-      resize: vertical;
-    }
-    .section-title {
-      font-size: 18px;
-      margin-bottom: 10px;
-    }
+    input:focus, select:focus, textarea:focus { outline:none; border-color:var(--blue); }
+    textarea { min-height:80px; resize:vertical; }
+    .form-actions { display:flex; gap:8px; margin-top:4px; flex-wrap:wrap; }
+    #cancelEditBtn { display:none; }
+
+    /* section title */
+    .section-title { font-size:16px; font-weight:700; margin-bottom:12px; }
+
+    /* event card */
     .event-card {
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 12px;
-      margin-bottom: 10px;
+      border:1.5px solid var(--line); border-radius:12px; padding:12px;
+      margin-bottom:10px; transition:border-color .15s;
     }
+    .event-card:hover { border-color:#94a3b8; }
     .event-head {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
+      display:flex; justify-content:space-between; align-items:flex-start; gap:8px;
     }
-    .event-title-row {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-wrap: wrap;
-      margin-bottom: 6px;
-    }
+    .event-left { flex:1; min-width:0; }
+    .event-title-row { display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:4px; }
+    .event-name { font-weight:700; font-size:15px; }
     .member-badge {
-      display: inline-block;
-      border-radius: 999px;
-      padding: 3px 8px;
-      font-size: 12px;
-      font-weight: bold;
+      border-radius:999px; padding:2px 8px; font-size:11px; font-weight:700;
     }
-    .member-みんな { background: #e2e8f0; color: #1e293b; }
-    .member-自分 { background: #dbeafe; color: #1d4ed8; }
-    .member-家族 { background: #dcfce7; color: #166534; }
-    .member-友だち { background: #fce7f3; color: #be185d; }
-    .member-仕事 { background: #fef3c7; color: #b45309; }
-    .delete-btn {
-      color: var(--danger);
-      border-color: var(--danger-line);
-      background: #fff;
-    }
-    .hidden { display: none; }
-    @media (min-width: 700px) {
-      .app {
-        padding: 16px;
-      }
-      .header {
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
-      }
-      .button-row {
-        display: flex;
-        flex-wrap: wrap;
-      }
-      .button-row > * {
-        width: auto;
-      }
-      .layout {
-        grid-template-columns: minmax(0, 1.45fr) minmax(320px, 1fr);
-      }
-      .week-grid,
-      .calendar-grid {
-        gap: 8px;
-      }
-      .day {
-        min-height: 96px;
-        padding: 8px;
-      }
-      .preview-item {
-        font-size: 12px;
-        padding: 4px 6px;
-      }
-      .event-head {
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: flex-start;
-      }
-      .month-title {
-        font-size: 22px;
-      }
-      .title {
-        font-size: 28px;
-      }
+    .event-time { font-size:13px; color:var(--subtle); }
+    .event-note { font-size:13px; color:var(--subtle); margin-top:3px; }
+    .event-actions { display:flex; gap:6px; flex-shrink:0; }
+
+    /* empty state */
+    .empty { color:var(--subtle); font-size:14px; text-align:center; padding:20px 0; }
+
+    .hidden { display:none; }
+
+    @media (min-width:700px) {
+      .app { padding:20px; }
+      .header { flex-direction:row; justify-content:space-between; align-items:flex-start; }
+      .layout { grid-template-columns:minmax(0,1.5fr) minmax(300px,1fr); }
+      .day { min-height:90px; padding:7px; }
+      .week-grid,.calendar-grid { gap:5px; }
+      .preview-pill { font-size:11px; }
+      .month-title { font-size:20px; }
+      .title { font-size:26px; }
+      .form-grid { grid-template-columns:1fr 1fr; }
+      .form-group.full { grid-column:1/-1; }
     }
   </style>
 </head>
 <body>
-  <div class="app">
+<div class="app">
+
+  <!-- header -->
+  <div class="panel">
+    <div class="header">
+      <div>
+        <h1 class="title">📅 共有カレンダー</h1>
+        <p class="subtitle">予定の追加・編集・削除ができます。データはブラウザに保存されます。</p>
+      </div>
+      <div class="header-actions">
+        <button id="exportButton" class="btn-icon">書き出し</button>
+        <label class="file-label btn-icon">読み込み
+          <input id="importInput" class="hidden" type="file" accept="application/json" />
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="layout">
+    <!-- calendar -->
     <div class="panel">
-      <div class="header">
-        <div>
-          <h1 class="title">みんなで共有カレンダー</h1>
-          <p class="subtitle">スマホでも見やすい1ファイル版です。予定の追加・削除・月移動・JSON入出力・ローカル保存ができます。</p>
-        </div>
-        <div class="button-row">
-          <button id="addTopButton" class="primary">予定を追加</button>
-          <button id="exportButton">JSONを書き出し</button>
-          <label class="file-label">JSONを読み込み
-            <input id="importInput" class="hidden" type="file" accept="application/json" />
-          </label>
+      <div class="month-header">
+        <h2 id="monthTitle" class="month-title"></h2>
+        <div class="month-nav">
+          <button id="todayButton" class="today-btn">今日</button>
+          <button id="prevMonthButton" class="btn-icon">←</button>
+          <button id="nextMonthButton" class="btn-icon">→</button>
         </div>
       </div>
-      <div id="message" class="helper">ローカル保存で動作します</div>
+      <div class="week-grid" id="weekdayRow"></div>
+      <div class="calendar-grid" id="calendarGrid"></div>
     </div>
 
-    <div class="layout">
+    <!-- sidebar -->
+    <div>
+      <!-- form -->
       <div class="panel">
-        <div class="month-header">
-          <button id="prevMonthButton">←</button>
-          <h2 id="monthTitle" class="month-title"></h2>
-          <button id="nextMonthButton">→</button>
-        </div>
-        <div class="week-grid" id="weekdayRow"></div>
-        <div class="calendar-grid" id="calendarGrid"></div>
-      </div>
-
-      <div>
-        <div class="panel">
-          <h2 class="section-title">予定フォーム</h2>
-          <div class="form-group">
-            <label for="titleInput">予定名</label>
-            <input id="titleInput" placeholder="例: 会議 / ごはん / 病院" />
+        <h2 id="formTitle" class="section-title">予定を追加</h2>
+        <div class="form-grid">
+          <div class="form-group full">
+            <label for="titleInput">予定名 *</label>
+            <input id="titleInput" placeholder="例: 会議、病院、ごはん" />
           </div>
           <div class="form-group">
-            <label for="dateInput">日付</label>
+            <label for="dateInput">日付 *</label>
             <input id="dateInput" type="date" />
           </div>
           <div class="form-group">
@@ -322,7 +254,7 @@
             <input id="timeInput" type="time" />
           </div>
           <div class="form-group">
-            <label for="memberInput">担当</label>
+            <label for="memberInput">カテゴリ</label>
             <select id="memberInput">
               <option>みんな</option>
               <option>自分</option>
@@ -331,387 +263,378 @@
               <option>仕事</option>
             </select>
           </div>
-          <div class="form-group">
+          <div class="form-group full">
             <label for="noteInput">メモ</label>
             <textarea id="noteInput" placeholder="場所、持ち物、補足など"></textarea>
           </div>
-          <button id="addFormButton" class="primary">この内容で追加</button>
         </div>
-
-        <div class="panel">
-          <h2 id="selectedDateTitle" class="section-title"></h2>
-          <div id="selectedEvents"></div>
+        <div class="form-actions">
+          <button id="submitButton" class="btn-primary">追加する</button>
+          <button id="cancelEditBtn">キャンセル</button>
         </div>
       </div>
-    </div>
 
-    <div class="panel">
-      <strong>確認用テスト</strong>
-      <div class="helper" style="margin-top: 8px;">
-        1. スマホ幅でも横スクロールなしで表示できる。<br />
-        2. 予定名を入力して追加すると、該当日に件数バッジと予定プレビューが出る。<br />
-        3. 前後の月ボタンで表示月が切り替わる。<br />
-        4. 削除を押すと、その予定が一覧と日付セルから消える。<br />
-        5. JSONを書き出しでダウンロードできる。<br />
-        6. JSONを読み込みで配列形式の予定データを復元できる。<br />
-        7. 再読み込み後も localStorage が使える環境では予定が残る。<br />
-        8. この HTML ファイルをスマホブラウザで直接開いても基本操作ができる。
+      <!-- event list for selected date -->
+      <div class="panel">
+        <h2 id="selectedDateTitle" class="section-title"></h2>
+        <div id="selectedEvents"></div>
       </div>
     </div>
   </div>
 
-  <script>
-    const STORAGE_KEY = "shared-calendar-mobile-browser-v1";
-    const MEMBER_OPTIONS = ["みんな", "自分", "家族", "友だち", "仕事"];
+</div>
 
-    function pad(n) {
-      return String(n).padStart(2, "0");
-    }
+<!-- toast -->
+<div id="toast"></div>
 
-    function toDateKey(date) {
-      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-    }
+<script>
+  const STORAGE_KEY = "shared-calendar-v2";
+  const MEMBER_OPTIONS = ["みんな","自分","家族","友だち","仕事"];
 
-    function fromDateKey(dateKey) {
-      const parts = String(dateKey || "").split("-").map(Number);
-      if (parts.length !== 3 || parts.some(Number.isNaN)) return new Date();
-      return new Date(parts[0], parts[1] - 1, parts[2]);
-    }
-
-    function monthLabel(date) {
-      return `${date.getFullYear()}年 ${date.getMonth() + 1}月`;
-    }
-
-    function buildMonthCells(viewDate) {
-      const first = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1);
-      const start = new Date(first);
-      start.setDate(first.getDate() - first.getDay());
-      const cells = [];
-      for (let i = 0; i < 42; i += 1) {
-        const d = new Date(start);
-        d.setDate(start.getDate() + i);
-        cells.push(d);
-      }
-      return cells;
-    }
-
-    function createId() {
-      if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
-        return crypto.randomUUID();
-      }
-      return `id-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-    }
-
-    function normalizeEvent(input) {
-      return {
-        id: typeof input?.id === "string" && input.id ? input.id : createId(),
-        title: typeof input?.title === "string" ? input.title.trim() : "",
-        date: typeof input?.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(input.date) ? input.date : toDateKey(new Date()),
-        time: typeof input?.time === "string" ? input.time : "",
-        member: MEMBER_OPTIONS.includes(input?.member) ? input.member : "みんな",
-        note: typeof input?.note === "string" ? input.note.trim() : "",
-      };
-    }
-
-    function getDefaultEvents() {
-      const today = toDateKey(new Date());
-      return [
-        { id: createId(), title: "買い物", date: today, time: "18:00", member: "家族", note: "スーパーで夕飯の材料" },
-        { id: createId(), title: "打ち合わせ", date: today, time: "10:00", member: "仕事", note: "オンライン" }
-      ];
-    }
-
-    function safeStorageGet(key) {
-      try {
-        return window.localStorage ? window.localStorage.getItem(key) : null;
-      } catch (e) {
-        return null;
-      }
-    }
-
-    function safeStorageSet(key, value) {
-      try {
-        if (!window.localStorage) return false;
-        window.localStorage.setItem(key, value);
-        return true;
-      } catch (e) {
-        return false;
-      }
-    }
-
-    function loadEvents() {
-      const raw = safeStorageGet(STORAGE_KEY);
-      if (!raw) return getDefaultEvents();
-      try {
-        const parsed = JSON.parse(raw);
-        if (!Array.isArray(parsed)) return getDefaultEvents();
-        const normalized = parsed.map(normalizeEvent).filter((event) => event.title);
-        return normalized.length ? normalized : getDefaultEvents();
-      } catch (e) {
-        return getDefaultEvents();
-      }
-    }
-
-    const state = {
-      now: new Date(),
-      viewDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-      selectedDate: toDateKey(new Date()),
-      events: loadEvents(),
-      message: "ローカル保存で動作します"
+  function pad(n) { return String(n).padStart(2,"0"); }
+  function toDateKey(d) { return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+  function fromDateKey(s) {
+    const p = String(s||"").split("-").map(Number);
+    if (p.length!==3||p.some(isNaN)) return new Date();
+    return new Date(p[0],p[1]-1,p[2]);
+  }
+  function monthLabel(d) { return `${d.getFullYear()}年 ${d.getMonth()+1}月`; }
+  function buildCells(viewDate) {
+    const first = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1);
+    const start = new Date(first);
+    start.setDate(first.getDate()-first.getDay());
+    return Array.from({length:42},(_,i)=>{ const d=new Date(start); d.setDate(start.getDate()+i); return d; });
+  }
+  function uid() {
+    return (typeof crypto!=="undefined"&&crypto.randomUUID)?crypto.randomUUID():`id-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  }
+  function normalizeEvent(e) {
+    return {
+      id: typeof e?.id==="string"&&e.id?e.id:uid(),
+      title: typeof e?.title==="string"?e.title.trim():"",
+      date: /^\d{4}-\d{2}-\d{2}$/.test(e?.date)?e.date:toDateKey(new Date()),
+      time: typeof e?.time==="string"?e.time:"",
+      member: MEMBER_OPTIONS.includes(e?.member)?e.member:"みんな",
+      note: typeof e?.note==="string"?e.note.trim():"",
     };
+  }
 
-    const messageEl = document.getElementById("message");
-    const monthTitleEl = document.getElementById("monthTitle");
-    const weekdayRowEl = document.getElementById("weekdayRow");
-    const calendarGridEl = document.getElementById("calendarGrid");
-    const selectedDateTitleEl = document.getElementById("selectedDateTitle");
-    const selectedEventsEl = document.getElementById("selectedEvents");
-    const titleInput = document.getElementById("titleInput");
-    const dateInput = document.getElementById("dateInput");
-    const timeInput = document.getElementById("timeInput");
-    const memberInput = document.getElementById("memberInput");
-    const noteInput = document.getElementById("noteInput");
+  function loadEvents() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return defaultEvents();
+      const arr = JSON.parse(raw);
+      if (!Array.isArray(arr)) return defaultEvents();
+      const evs = arr.map(normalizeEvent).filter(e=>e.title);
+      return evs.length?evs:defaultEvents();
+    } catch { return defaultEvents(); }
+  }
+  function defaultEvents() {
+    const today = toDateKey(new Date());
+    return [
+      {id:uid(),title:"買い物",date:today,time:"18:00",member:"家族",note:"スーパーで夕飯の材料"},
+      {id:uid(),title:"打ち合わせ",date:today,time:"10:00",member:"仕事",note:"オンライン"},
+    ];
+  }
+  function saveEvents() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.events)); } catch {}
+  }
 
-    function setMessage(text) {
-      state.message = text;
-      messageEl.textContent = text;
-    }
+  const state = {
+    now: new Date(),
+    viewDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+    selectedDate: toDateKey(new Date()),
+    events: loadEvents(),
+    editingId: null,
+  };
 
-    function syncFormDate() {
-      dateInput.value = state.selectedDate;
-    }
+  // DOM refs
+  const $ = id => document.getElementById(id);
+  const monthTitleEl   = $("monthTitle");
+  const weekdayRowEl   = $("weekdayRow");
+  const calendarGridEl = $("calendarGrid");
+  const selectedDateTitleEl = $("selectedDateTitle");
+  const selectedEventsEl    = $("selectedEvents");
+  const titleInput   = $("titleInput");
+  const dateInput    = $("dateInput");
+  const timeInput    = $("timeInput");
+  const memberInput  = $("memberInput");
+  const noteInput    = $("noteInput");
+  const submitButton  = $("submitButton");
+  const cancelEditBtn = $("cancelEditBtn");
+  const formTitleEl   = $("formTitle");
+  const toastEl       = $("toast");
 
-    function saveEvents() {
-      const ok = safeStorageSet(STORAGE_KEY, JSON.stringify(state.events));
-      if (!ok) setMessage("この環境では保存が制限されることがあります");
-    }
+  // toast
+  let toastTimer;
+  function showToast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=>toastEl.classList.remove("show"), 2200);
+  }
 
-    function addEventFromForm() {
-      const nextEvent = normalizeEvent({
-        id: createId(),
-        title: titleInput.value,
-        date: dateInput.value,
-        time: timeInput.value,
-        member: memberInput.value,
-        note: noteInput.value
-      });
+  // form state
+  function enterEditMode(event) {
+    state.editingId = event.id;
+    titleInput.value  = event.title;
+    dateInput.value   = event.date;
+    timeInput.value   = event.time;
+    memberInput.value = event.member;
+    noteInput.value   = event.note;
+    submitButton.textContent = "更新する";
+    formTitleEl.textContent  = "予定を編集";
+    cancelEditBtn.style.display = "";
+    titleInput.focus();
+    formTitleEl.scrollIntoView({behavior:"smooth",block:"start"});
+  }
+  function exitEditMode() {
+    state.editingId = null;
+    titleInput.value  = "";
+    timeInput.value   = "";
+    memberInput.value = "みんな";
+    noteInput.value   = "";
+    dateInput.value   = state.selectedDate;
+    submitButton.textContent = "追加する";
+    formTitleEl.textContent  = "予定を追加";
+    cancelEditBtn.style.display = "none";
+  }
 
-      if (!nextEvent.title) {
-        setMessage("予定名を入れてください");
-        return;
-      }
-
-      state.events.push(nextEvent);
-      state.selectedDate = nextEvent.date;
-      titleInput.value = "";
-      timeInput.value = "";
-      memberInput.value = "みんな";
-      noteInput.value = "";
-      saveEvents();
-      setMessage("予定を追加しました");
-      render();
-    }
-
-    function deleteEvent(id) {
-      state.events = state.events.filter((event) => event.id !== id);
-      saveEvents();
-      setMessage("予定を削除しました");
-      render();
-    }
-
-    function exportJson() {
-      try {
-        const blob = new Blob([JSON.stringify(state.events, null, 2)], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = "shared-calendar-events.json";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-        setMessage("JSONを書き出しました");
-      } catch (e) {
-        setMessage("書き出しに失敗しました");
-      }
-    }
-
-    function importJson(file) {
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function () {
-        try {
-          const parsed = JSON.parse(String(reader.result || "[]"));
-          if (!Array.isArray(parsed)) {
-            setMessage("JSONの形式が正しくありません");
-            return;
-          }
-          state.events = parsed.map(normalizeEvent).filter((event) => event.title);
-          saveEvents();
-          setMessage("JSONを読み込みました");
-          render();
-        } catch (e) {
-          setMessage("JSONの読み込みに失敗しました");
-        }
-      };
-      reader.readAsText(file);
-    }
-
-    function renderWeekdays() {
-      weekdayRowEl.innerHTML = "";
-      ["日", "月", "火", "水", "木", "金", "土"].forEach((day) => {
-        const el = document.createElement("div");
-        el.className = "weekday";
-        el.textContent = day;
-        weekdayRowEl.appendChild(el);
-      });
-    }
-
-    function renderCalendar() {
-      const todayKey = toDateKey(state.now);
-      const cells = buildMonthCells(state.viewDate);
-      const countsByDate = {};
-      state.events.forEach((event) => {
-        countsByDate[event.date] = (countsByDate[event.date] || 0) + 1;
-      });
-
-      calendarGridEl.innerHTML = "";
-      monthTitleEl.textContent = monthLabel(state.viewDate);
-
-      cells.forEach((date) => {
-        const dateKey = toDateKey(date);
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "day";
-        if (date.getMonth() !== state.viewDate.getMonth()) button.classList.add("other-month");
-        if (dateKey === state.selectedDate) button.classList.add("selected");
-        button.addEventListener("click", () => {
-          state.selectedDate = dateKey;
-          syncFormDate();
-          render();
-          document.getElementById("selectedDateTitle").scrollIntoView({ behavior: "smooth", block: "start" });
-        });
-
-        const top = document.createElement("div");
-        top.className = "day-top";
-
-        const dayNum = document.createElement("span");
-        dayNum.className = "day-num";
-        if (dateKey === todayKey) {
-          const todaySpan = document.createElement("span");
-          todaySpan.className = "today";
-          todaySpan.textContent = String(date.getDate());
-          dayNum.appendChild(todaySpan);
-        } else {
-          dayNum.textContent = String(date.getDate());
-        }
-        top.appendChild(dayNum);
-
-        if (countsByDate[dateKey]) {
-          const badge = document.createElement("span");
-          badge.className = "badge";
-          badge.textContent = String(countsByDate[dateKey]);
-          top.appendChild(badge);
-        }
-
-        button.appendChild(top);
-
-        state.events.filter((event) => event.date === dateKey).slice(0, 2).forEach((event) => {
-          const preview = document.createElement("div");
-          preview.className = "preview-item";
-          preview.textContent = `${event.time ? event.time + " " : ""}${event.title}`;
-          button.appendChild(preview);
-        });
-
-        calendarGridEl.appendChild(button);
-      });
-    }
-
-    function renderSelectedEvents() {
-      const selectedDate = fromDateKey(state.selectedDate);
-      selectedDateTitleEl.textContent = `${selectedDate.getMonth() + 1}月${selectedDate.getDate()}日の予定`;
-      selectedEventsEl.innerHTML = "";
-
-      const list = state.events
-        .filter((event) => event.date === state.selectedDate)
-        .sort((a, b) => (a.time || "99:99").localeCompare(b.time || "99:99"));
-
-      if (!list.length) {
-        const empty = document.createElement("div");
-        empty.className = "helper";
-        empty.textContent = "予定はまだありません";
-        selectedEventsEl.appendChild(empty);
-        return;
-      }
-
-      list.forEach((event) => {
-        const card = document.createElement("div");
-        card.className = "event-card";
-
-        const head = document.createElement("div");
-        head.className = "event-head";
-
-        const left = document.createElement("div");
-        const titleLine = document.createElement("div");
-        titleLine.className = "event-title-row";
-
-        const strong = document.createElement("strong");
-        strong.textContent = event.title;
-        titleLine.appendChild(strong);
-
-        const badge = document.createElement("span");
-        badge.className = `member-badge member-${event.member}`;
-        badge.textContent = event.member;
-        titleLine.appendChild(badge);
-        left.appendChild(titleLine);
-
-        const time = document.createElement("div");
-        time.className = "helper";
-        time.textContent = event.time || "時間未設定";
-        left.appendChild(time);
-
-        if (event.note) {
-          const note = document.createElement("div");
-          note.className = "helper";
-          note.textContent = event.note;
-          left.appendChild(note);
-        }
-
-        const del = document.createElement("button");
-        del.type = "button";
-        del.className = "delete-btn";
-        del.textContent = "削除";
-        del.addEventListener("click", () => deleteEvent(event.id));
-
-        head.appendChild(left);
-        head.appendChild(del);
-        card.appendChild(head);
-        selectedEventsEl.appendChild(card);
-      });
-    }
-
-    function render() {
-      messageEl.textContent = state.message;
-      syncFormDate();
-      renderCalendar();
-      renderSelectedEvents();
-    }
-
-    document.getElementById("addTopButton").addEventListener("click", addEventFromForm);
-    document.getElementById("addFormButton").addEventListener("click", addEventFromForm);
-    document.getElementById("prevMonthButton").addEventListener("click", () => {
-      state.viewDate = new Date(state.viewDate.getFullYear(), state.viewDate.getMonth() - 1, 1);
-      render();
+  function submitForm() {
+    const ev = normalizeEvent({
+      id:     state.editingId || uid(),
+      title:  titleInput.value,
+      date:   dateInput.value,
+      time:   timeInput.value,
+      member: memberInput.value,
+      note:   noteInput.value,
     });
-    document.getElementById("nextMonthButton").addEventListener("click", () => {
-      state.viewDate = new Date(state.viewDate.getFullYear(), state.viewDate.getMonth() + 1, 1);
-      render();
-    });
-    document.getElementById("exportButton").addEventListener("click", exportJson);
-    document.getElementById("importInput").addEventListener("change", (e) => importJson(e.target.files && e.target.files[0]));
+    if (!ev.title) { showToast("予定名を入力してください"); titleInput.focus(); return; }
 
-    renderWeekdays();
+    if (state.editingId) {
+      state.events = state.events.map(e => e.id===state.editingId?ev:e);
+      showToast("予定を更新しました");
+    } else {
+      state.events.push(ev);
+      showToast("予定を追加しました");
+    }
+    state.selectedDate = ev.date;
+    saveEvents();
+    exitEditMode();
     render();
-  </script>
+  }
+
+  function deleteEvent(id) {
+    state.events = state.events.filter(e=>e.id!==id);
+    if (state.editingId===id) exitEditMode();
+    saveEvents();
+    showToast("予定を削除しました");
+    render();
+  }
+
+  function exportJson() {
+    try {
+      const blob = new Blob([JSON.stringify(state.events,null,2)],{type:"application/json"});
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement("a");
+      a.href = url; a.download = "calendar-events.json";
+      document.body.appendChild(a); a.click();
+      document.body.removeChild(a); URL.revokeObjectURL(url);
+      showToast("書き出しました");
+    } catch { showToast("書き出しに失敗しました"); }
+  }
+
+  function importJson(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const arr = JSON.parse(String(reader.result||"[]"));
+        if (!Array.isArray(arr)) { showToast("形式が正しくありません"); return; }
+        state.events = arr.map(normalizeEvent).filter(e=>e.title);
+        saveEvents(); showToast("読み込みました"); render();
+      } catch { showToast("読み込みに失敗しました"); }
+    };
+    reader.readAsText(file);
+  }
+
+  // render
+  function renderWeekdays() {
+    const days = [
+      {label:"日",cls:"sun"},{label:"月",cls:""},{label:"火",cls:""},
+      {label:"水",cls:""},{label:"木",cls:""},{label:"金",cls:""},{label:"土",cls:"sat"},
+    ];
+    weekdayRowEl.innerHTML = "";
+    days.forEach(({label,cls})=>{
+      const el = document.createElement("div");
+      el.className = "weekday" + (cls?" "+cls:"");
+      el.textContent = label;
+      weekdayRowEl.appendChild(el);
+    });
+  }
+
+  function renderCalendar() {
+    const todayKey = toDateKey(state.now);
+    const cells    = buildCells(state.viewDate);
+    const byDate   = {};
+    state.events.forEach(e => { (byDate[e.date]||(byDate[e.date]=[])).push(e); });
+
+    calendarGridEl.innerHTML = "";
+    monthTitleEl.textContent = monthLabel(state.viewDate);
+
+    cells.forEach(date => {
+      const key = toDateKey(date);
+      const dow = date.getDay();
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "day";
+      if (date.getMonth()!==state.viewDate.getMonth()) btn.classList.add("other-month");
+      if (key===state.selectedDate) btn.classList.add("selected");
+      if (key===todayKey) btn.classList.add("today-cell");
+
+      btn.addEventListener("click",()=>{
+        state.selectedDate = key;
+        if (!state.editingId) dateInput.value = key;
+        render();
+        selectedDateTitleEl.closest(".panel").scrollIntoView({behavior:"smooth",block:"start"});
+      });
+
+      const top = document.createElement("div");
+      top.className = "day-top";
+
+      const numEl = document.createElement("span");
+      numEl.className = "day-num";
+      if (key===todayKey) numEl.classList.add("is-today");
+      else if (dow===0) numEl.classList.add("sun");
+      else if (dow===6) numEl.classList.add("sat");
+      numEl.textContent = String(date.getDate());
+      top.appendChild(numEl);
+
+      const evList = byDate[key]||[];
+      if (evList.length>2) {
+        const more = document.createElement("span");
+        more.className = "more-badge";
+        more.textContent = `+${evList.length}`;
+        top.appendChild(more);
+      }
+      btn.appendChild(top);
+
+      evList.slice(0,2).forEach(ev => {
+        const pill = document.createElement("div");
+        pill.className = `preview-pill cat-${ev.member}`;
+        pill.textContent = `${ev.time?ev.time+" ":""}${ev.title}`;
+        btn.appendChild(pill);
+      });
+
+      calendarGridEl.appendChild(btn);
+    });
+  }
+
+  function renderSelectedEvents() {
+    const d = fromDateKey(state.selectedDate);
+    selectedDateTitleEl.textContent = `${d.getMonth()+1}月${d.getDate()}日の予定`;
+    selectedEventsEl.innerHTML = "";
+
+    const list = (state.events.filter(e=>e.date===state.selectedDate))
+      .sort((a,b)=>(a.time||"99:99").localeCompare(b.time||"99:99"));
+
+    if (!list.length) {
+      const el = document.createElement("div");
+      el.className = "empty";
+      el.textContent = "予定はありません";
+      selectedEventsEl.appendChild(el);
+      return;
+    }
+
+    list.forEach(ev => {
+      const card = document.createElement("div");
+      card.className = "event-card";
+
+      const head = document.createElement("div");
+      head.className = "event-head";
+
+      const left = document.createElement("div");
+      left.className = "event-left";
+
+      const titleRow = document.createElement("div");
+      titleRow.className = "event-title-row";
+
+      const name = document.createElement("span");
+      name.className = "event-name";
+      name.textContent = ev.title;
+      titleRow.appendChild(name);
+
+      const badge = document.createElement("span");
+      badge.className = `member-badge cat-${ev.member}`;
+      badge.textContent = ev.member;
+      titleRow.appendChild(badge);
+      left.appendChild(titleRow);
+
+      if (ev.time) {
+        const t = document.createElement("div");
+        t.className = "event-time";
+        t.textContent = ev.time;
+        left.appendChild(t);
+      }
+      if (ev.note) {
+        const n = document.createElement("div");
+        n.className = "event-note";
+        n.textContent = ev.note;
+        left.appendChild(n);
+      }
+
+      const actions = document.createElement("div");
+      actions.className = "event-actions";
+
+      const editBtn = document.createElement("button");
+      editBtn.className = "btn-sm";
+      editBtn.textContent = "編集";
+      editBtn.addEventListener("click",()=>enterEditMode(ev));
+
+      const delBtn = document.createElement("button");
+      delBtn.className = "btn-sm btn-danger";
+      delBtn.textContent = "削除";
+      delBtn.addEventListener("click",()=>deleteEvent(ev.id));
+
+      actions.appendChild(editBtn);
+      actions.appendChild(delBtn);
+
+      head.appendChild(left);
+      head.appendChild(actions);
+      card.appendChild(head);
+      selectedEventsEl.appendChild(card);
+    });
+  }
+
+  function render() {
+    renderCalendar();
+    renderSelectedEvents();
+  }
+
+  // events
+  submitButton.addEventListener("click", submitForm);
+  cancelEditBtn.addEventListener("click",()=>{ exitEditMode(); render(); });
+  $("todayButton").addEventListener("click",()=>{
+    state.viewDate = new Date(state.now.getFullYear(), state.now.getMonth(), 1);
+    state.selectedDate = toDateKey(state.now);
+    exitEditMode();
+    render();
+  });
+  $("prevMonthButton").addEventListener("click",()=>{
+    state.viewDate = new Date(state.viewDate.getFullYear(), state.viewDate.getMonth()-1, 1);
+    render();
+  });
+  $("nextMonthButton").addEventListener("click",()=>{
+    state.viewDate = new Date(state.viewDate.getFullYear(), state.viewDate.getMonth()+1, 1);
+    render();
+  });
+  $("exportButton").addEventListener("click", exportJson);
+  $("importInput").addEventListener("change",e=>importJson(e.target.files&&e.target.files[0]));
+
+  // init
+  dateInput.value = state.selectedDate;
+  renderWeekdays();
+  render();
+</script>
 </body>
 </html>
